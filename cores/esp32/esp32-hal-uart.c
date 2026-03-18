@@ -357,7 +357,7 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
   const uart_periph_sig_t *upin = &uart_periph_signal[uart_num].pins[idx];
 
   // In theory, if default_gpio is -1, iomux_func should also be -1, but let's be safe and test both.
-  if (upin->iomux_func == -1 || upin->default_gpio == -1 || upin->default_gpio != io_num) {
+  if (upin->default_gpio == -1 || upin->default_gpio != io_num) {
     return false;
   }
 
@@ -509,112 +509,132 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
   // No need for Arduino Layer to check it again
   bool retCode = true;
   if (rxPin >= 0) {
-    // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) {
-      perimanClearPinBus(rxPin);
-    }
-    // connect RX Pad
-    bool ret = ESP_OK == _uartInternalSetPin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    if (GPIO_IS_VALID_GPIO(rxPin)) {
+      // forces a clean detaching from a previous peripheral
+      if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) {
+        perimanClearPinBus(rxPin);
+      }
+      // connect RX Pad
+      bool ret = ESP_OK == _uartInternalSetPin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-      ret &= lp_uart_config_io(uart->num, rxPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_RX_PIN_IDX);
-    }
+      if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
+        ret &= lp_uart_config_io(uart->num, rxPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_RX_PIN_IDX);
+      }
 #endif
-    if (ret) {
-      ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart, uart_num, -1);
       if (ret) {
-        uart->_rxPin = rxPin;
-        // set Peripheral Manager deInit Callback for this UART pin
-        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX) == NULL) {
-          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, _uartDetachBus_RX);
+        ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart, uart_num, -1);
+        if (ret) {
+          uart->_rxPin = rxPin;
+          // set Peripheral Manager deInit Callback for this UART pin
+          if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX) == NULL) {
+            perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, _uartDetachBus_RX);
+          }
         }
       }
+      if (!ret) {
+        log_e("UART%u failed to attach RX pin %d", uart_num, rxPin);
+      }
+      retCode &= ret;
+    } else {
+      log_e("UART%u invalid RX pin %d", uart_num, rxPin);
+      retCode = false;
     }
-    if (!ret) {
-      log_e("UART%u failed to attach RX pin %d", uart_num, rxPin);
-    }
-    retCode &= ret;
   }
   if (txPin >= 0) {
-    // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) {
-      perimanClearPinBus(txPin);
-    }
-    // connect TX Pad
-    bool ret = ESP_OK == _uartInternalSetPin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    if (GPIO_IS_VALID_OUTPUT_GPIO(txPin)) {
+      // forces a clean detaching from a previous peripheral
+      if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) {
+        perimanClearPinBus(txPin);
+      }
+      // connect TX Pad
+      bool ret = ESP_OK == _uartInternalSetPin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-      ret &= lp_uart_config_io(uart->num, txPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_TX_PIN_IDX);
-    }
+      if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
+        ret &= lp_uart_config_io(uart->num, txPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_TX_PIN_IDX);
+      }
 #endif
-    if (ret) {
-      ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart, uart_num, -1);
       if (ret) {
-        uart->_txPin = txPin;
-        // set Peripheral Manager deInit Callback for this UART pin
-        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_TX) == NULL) {
-          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, _uartDetachBus_TX);
+        ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart, uart_num, -1);
+        if (ret) {
+          uart->_txPin = txPin;
+          // set Peripheral Manager deInit Callback for this UART pin
+          if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_TX) == NULL) {
+            perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, _uartDetachBus_TX);
+          }
         }
       }
+      if (!ret) {
+        log_e("UART%u failed to attach TX pin %d", uart_num, txPin);
+      }
+      retCode &= ret;
+    } else {
+      log_e("UART%u invalid TX pin %d", uart_num, txPin);
+      retCode = false;
     }
-    if (!ret) {
-      log_e("UART%u failed to attach TX pin %d", uart_num, txPin);
-    }
-    retCode &= ret;
   }
   if (ctsPin >= 0) {
-    // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) {
-      perimanClearPinBus(ctsPin);
-    }
-    // connect CTS Pad
-    bool ret = ESP_OK == _uartInternalSetPin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
+    if (GPIO_IS_VALID_GPIO(ctsPin)) {
+      // forces a clean detaching from a previous peripheral
+      if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) {
+        perimanClearPinBus(ctsPin);
+      }
+      // connect CTS Pad
+      bool ret = ESP_OK == _uartInternalSetPin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-      ret &= lp_uart_config_io(uart->num, ctsPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_CTS_PIN_IDX);
-    }
+      if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
+        ret &= lp_uart_config_io(uart->num, ctsPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_CTS_PIN_IDX);
+      }
 #endif
-    if (ret) {
-      ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart, uart_num, -1);
       if (ret) {
-        uart->_ctsPin = ctsPin;
-        // set Peripheral Manager deInit Callback for this UART pin
-        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_CTS) == NULL) {
-          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, _uartDetachBus_CTS);
+        ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart, uart_num, -1);
+        if (ret) {
+          uart->_ctsPin = ctsPin;
+          // set Peripheral Manager deInit Callback for this UART pin
+          if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_CTS) == NULL) {
+            perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, _uartDetachBus_CTS);
+          }
         }
       }
+      if (!ret) {
+        log_e("UART%u failed to attach CTS pin %d", uart_num, ctsPin);
+      }
+      retCode &= ret;
+    } else {
+      log_e("UART%u invalid CTS pin %d", uart_num, ctsPin);
+      retCode = false;
     }
-    if (!ret) {
-      log_e("UART%u failed to attach CTS pin %d", uart_num, ctsPin);
-    }
-    retCode &= ret;
   }
   if (rtsPin >= 0) {
-    // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) {
-      perimanClearPinBus(rtsPin);
-    }
-    // connect RTS Pad
-    bool ret = ESP_OK == _uartInternalSetPin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
+    if (GPIO_IS_VALID_OUTPUT_GPIO(rtsPin)) {
+      // forces a clean detaching from a previous peripheral
+      if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) {
+        perimanClearPinBus(rtsPin);
+      }
+      // connect RTS Pad
+      bool ret = ESP_OK == _uartInternalSetPin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-      ret &= lp_uart_config_io(uart->num, rtsPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_RTS_PIN_IDX);
-    }
+      if (ret && uart_num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
+        ret &= lp_uart_config_io(uart->num, rtsPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_RTS_PIN_IDX);
+      }
 #endif
-    if (ret) {
-      ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart, uart_num, -1);
       if (ret) {
-        uart->_rtsPin = rtsPin;
-        // set Peripheral Manager deInit Callback for this UART pin
-        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RTS) == NULL) {
-          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, _uartDetachBus_RTS);
+        ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart, uart_num, -1);
+        if (ret) {
+          uart->_rtsPin = rtsPin;
+          // set Peripheral Manager deInit Callback for this UART pin
+          if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RTS) == NULL) {
+            perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, _uartDetachBus_RTS);
+          }
         }
       }
+      if (!ret) {
+        log_e("UART%u failed to attach RTS pin %d", uart_num, rtsPin);
+      }
+      retCode &= ret;
+    } else {
+      log_e("UART%u invalid RTS pin %d", uart_num, rtsPin);
+      retCode = false;
     }
-    if (!ret) {
-      log_e("UART%u failed to attach RTS pin %d", uart_num, rtsPin);
-    }
-    retCode &= ret;
   }
   return retCode;
 }
