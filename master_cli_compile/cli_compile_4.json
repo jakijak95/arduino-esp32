@@ -273,7 +273,7 @@
                     },
 {"name": "libraries/ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 954789,
+                            "flash_bytes": 954989,
                             "flash_percentage": 72,
                             "ram_bytes": 36336,
                             "ram_percentage": 11
@@ -342,7 +342,7 @@
                     },
 {"name": "libraries/ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 1021717,
+                            "flash_bytes": 1021917,
                             "flash_percentage": 77,
                             "ram_bytes": 48956,
                             "ram_percentage": 14
@@ -382,7 +382,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 1002729,
+                            "flash_bytes": 1002929,
                             "flash_percentage": 76,
                             "ram_bytes": 47796,
                             "ram_percentage": 14
@@ -390,7 +390,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 1003125,
+                            "flash_bytes": 1003325,
                             "flash_percentage": 76,
                             "ram_bytes": 47764,
                             "ram_percentage": 14
@@ -398,7 +398,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 1006415,
+                            "flash_bytes": 1006615,
                             "flash_percentage": 76,
                             "ram_bytes": 47860,
                             "ram_percentage": 14
@@ -406,7 +406,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Serial",
                     "sizes": [{
-                            "flash_bytes": 1005855,
+                            "flash_bytes": 1006055,
                             "flash_percentage": 76,
                             "ram_bytes": 47860,
                             "ram_percentage": 14
@@ -414,7 +414,7 @@
                     },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                     "sizes": [{
-                            "flash_bytes": 1025465,
+                            "flash_bytes": 1025665,
                             "flash_percentage": 78,
                             "ram_bytes": 49996,
                             "ram_percentage": 15
@@ -422,7 +422,7 @@
                     },
 {"name": "libraries/ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
-                            "flash_bytes": 1048075,
+                            "flash_bytes": 1048275,
                             "flash_percentage": 79,
                             "ram_bytes": 51276,
                             "ram_percentage": 15
@@ -515,7 +515,7 @@
                     },
 {"name": "libraries/ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 961228,
+                            "flash_bytes": 961428,
                             "flash_percentage": 73,
                             "ram_bytes": 42180,
                             "ram_percentage": 12
@@ -555,7 +555,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 958500,
+                            "flash_bytes": 958700,
                             "flash_percentage": 73,
                             "ram_bytes": 41012,
                             "ram_percentage": 12
@@ -563,7 +563,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 958898,
+                            "flash_bytes": 959098,
                             "flash_percentage": 73,
                             "ram_bytes": 40964,
                             "ram_percentage": 12
@@ -571,7 +571,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 962186,
+                            "flash_bytes": 962386,
                             "flash_percentage": 73,
                             "ram_bytes": 41076,
                             "ram_percentage": 12
@@ -579,7 +579,7 @@
                     },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Serial",
                     "sizes": [{
-                            "flash_bytes": 961628,
+                            "flash_bytes": 961828,
                             "flash_percentage": 73,
                             "ram_bytes": 41076,
                             "ram_percentage": 12
@@ -587,7 +587,7 @@
                     },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                     "sizes": [{
-                            "flash_bytes": 981410,
+                            "flash_bytes": 981610,
                             "flash_percentage": 74,
                             "ram_bytes": 43196,
                             "ram_percentage": 13
@@ -595,7 +595,7 @@
                     },
 {"name": "libraries/ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
-                            "flash_bytes": 1004260,
+                            "flash_bytes": 1004460,
                             "flash_percentage": 76,
                             "ram_bytes": 44500,
                             "ram_percentage": 13
@@ -1055,7 +1055,7 @@
                     },
 {"name": "libraries/ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 890802,
+                            "flash_bytes": 890998,
                             "flash_percentage": 67,
                             "ram_bytes": 45792,
                             "ram_percentage": 13

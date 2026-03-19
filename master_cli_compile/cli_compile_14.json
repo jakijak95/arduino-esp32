@@ -269,9 +269,9 @@
                 "sketches": [
 {"name": "libraries/WiFi/examples/WiFiUDPClient",
                     "sizes": [{
-                            "flash_bytes": 855304,
+                            "flash_bytes": 858772,
                             "flash_percentage": 65,
-                            "ram_bytes": 31660,
+                            "ram_bytes": 31676,
                             "ram_percentage": 9
                             }]
                     },
@@ -431,7 +431,7 @@
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Gateway",
                     "sizes": [{
-                            "flash_bytes": 1231046,
+                            "flash_bytes": 1231234,
                             "flash_percentage": 36,
                             "ram_bytes": 61888,
                             "ram_percentage": 18
