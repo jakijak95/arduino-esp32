@@ -459,8 +459,6 @@ static void _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx_io_n
       if (uart_num < SOC_UART_HP_NUM) {
         gpio_func_sel(tx_io_num, PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(tx_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_TX_PIN_IDX), 0, 0);
-        // output enable is set inside esp_rom_gpio_connect_out_signal func after the signal is connected
-        // (output enabled too early may cause unnecessary level change at the pad)
       }
     }
   }
@@ -489,7 +487,6 @@ static void _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx_io_n
     if (uart_num < SOC_UART_HP_NUM) {
       gpio_func_sel(rts_io_num, PIN_FUNC_GPIO);
       esp_rom_gpio_connect_out_signal(rts_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RTS_PIN_IDX), 0, 0);
-      // output enable is set inside esp_rom_gpio_connect_out_signal func after the signal is connected
     }
   }
 
