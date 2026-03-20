@@ -186,7 +186,7 @@ static bool lp_uart_config_io(uint8_t uart_num, int8_t pin, rtc_gpio_mode_t dire
 static bool lpuartCheckPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin, uint8_t uart_nr) {
 // check if LP UART is being used and if the pins are valid
 #if !SOC_LP_GPIO_MATRIX_SUPPORTED  // ESP32-C6/C61/C5
-  uint16_t lp_uart_fixed_pin = uart_periph_signal[uart_nr].pins[SOC_UART_RX_PIN_IDX].default_gpio;
+  int16_t lp_uart_fixed_pin = uart_periph_signal[uart_nr].pins[SOC_UART_RX_PIN_IDX].default_gpio;
   bool allPinsAreGood = true;
   if (uart_nr >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
     if (rxPin >= 0 && rxPin != lp_uart_fixed_pin) {
