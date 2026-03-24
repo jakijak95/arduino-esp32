@@ -12,10 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/*
+  USB Audio Card bridge (device mode)
+
+  The MCU presents itself as a USB sound card. Audio flows in two directions:
+
+  - Playback (host → speakers): the PC sends PCM over USB. USBAudioCard calls
+    onSpkData() with each chunk; we apply host volume and push samples to I2S
+    so an external DAC/codec can drive speakers.
+
+  - Capture (microphone → host): we read PCM from I2S (ADC/codec mic path) and
+    call uac.write() so the host can record it.
+
+  Startup order: configure I2S first, then register callbacks and start the
+  audio device; finally start the USB stack so enumeration can complete.
+*/
+
 #include "ESP_I2S.h"
 #include "USB.h"
 #include "USBAudioCard.h"
 
+// I2S pinout and sample format depend on the chip: S3 uses 16-bit I2S matching
+// UAC 16-bit; other targets use 32-bit slots with 24-bit effective UAC data.
 #if CONFIG_IDF_TARGET_ESP32S3
 #define I2S_BCLK 4
 #define I2S_LRCK 5
@@ -32,12 +50,14 @@
 #define UAC_BPS UAC_BPS_24
 #endif
 
+// Default 48 kHz stereo in/out; UAC_BPS must match I2S_WIDTH for correct sample size.
 USBAudioCard uac(48000, UAC_BPS, UAC_SPK_STEREO, UAC_MIC_STEREO);
 I2SClass i2s;
 
-// Buffer to hold input (microphone) data
+// Staging buffer for one loop() iteration of mic samples (see toRead in loop()).
 uint8_t inputBuffer[1024];
 
+// Single callback for USB link state and UAC controls (volume, mute, rate, alt settings).
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_USB_EVENTS) {
     arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
@@ -60,6 +80,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   }
 }
 
+// BOOT button: debounced edge detect toggles USB master mute (does not affect I2S hardware).
 void checkButton() {
   // Poll every 50ms
   const uint32_t interval_ms = 50;
@@ -78,6 +99,7 @@ void checkButton() {
   btn_prev = btn;
 }
 
+// Invoked when the host sends playback PCM: apply UAC volume curve, then output on I2S.
 void onSpkData(void *data, uint16_t len) {
   uac.applyVolume(data, len);
   i2s.write((const uint8_t *)data, len);
@@ -94,13 +116,14 @@ void setup() {
   uac.onData(onSpkData);
   uac.begin();
 
+  // Stack-wide USB events (same handler also receives ARDUINO_USB_AUDIO_CARD_EVENTS above).
   USB.onEvent(usbEventCallback);
   USB.begin();
 }
 
 void loop() {
   checkButton();
-  // Read 1ms worth of Microphone Data
+  // Capture path: read ~1 ms of mic PCM from I2S, then send to the USB IN endpoint.
   size_t toRead = (uac.sampleRate() * uac.micChannels() * uac.bytesPerSample()) / 1000;
   size_t received = i2s.readBytes((char *)inputBuffer, toRead);
   if (received > 0) {
