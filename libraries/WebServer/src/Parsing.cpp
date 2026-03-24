@@ -188,16 +188,29 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       log_v("Start Raw");
       _currentHandler->raw(*this, _currentUri, *_currentRaw);
       _currentRaw->status = RAW_WRITE;
+      unsigned long lastDataMillis = millis();
 
       while (_currentRaw->totalSize < (size_t)_clientContentLength) {
-        size_t read_len = std::min((size_t)_clientContentLength - _currentRaw->totalSize, (size_t)HTTP_RAW_BUFLEN);
-        _currentRaw->currentSize = client.readBytes(_currentRaw->buf, read_len);
-        _currentRaw->totalSize += _currentRaw->currentSize;
-        if (_currentRaw->currentSize == 0) {
-          _currentRaw->status = RAW_ABORTED;
-          _currentHandler->raw(*this, _currentUri, *_currentRaw);
-          return false;
+        size_t remaining = (size_t)_clientContentLength - _currentRaw->totalSize;
+        int available = client.available();
+        if (available <= 0) {
+          if ((millis() - lastDataMillis) >= HTTP_MAX_POST_WAIT) {
+            _currentRaw->status = RAW_ABORTED;
+            _currentHandler->raw(*this, _currentUri, *_currentRaw);
+            return false;
+          }
+          delay(1);
+          continue;
         }
+        size_t read_len = std::min(remaining, (size_t)HTTP_RAW_BUFLEN);
+        read_len = std::min(read_len, (size_t)available);
+        _currentRaw->currentSize = client.read(_currentRaw->buf, read_len);
+        if (_currentRaw->currentSize == 0) {
+          delay(1);
+          continue;
+        }
+        lastDataMillis = millis();
+        _currentRaw->totalSize += _currentRaw->currentSize;
         _currentHandler->raw(*this, _currentUri, *_currentRaw);
       }
       _currentRaw->status = RAW_END;
@@ -506,6 +519,7 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
             char fastBoundary[fastBoundaryLen];
             snprintf(fastBoundary, fastBoundaryLen, "\r\n--%s", boundary.c_str());
             int boundaryPtr = 0;
+            size_t bytesSinceYield = 0;
             while (true) {
               int ret = _uploadReadByte(client);
               if (ret < 0) {
@@ -513,6 +527,7 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
                 return _parseFormUploadAborted();
               }
               char in = (char)ret;
+              bytesSinceYield++;
               if (in == fastBoundary[boundaryPtr]) {
                 // The input matched the current expected character, advance and possibly exit this file
                 boundaryPtr++;
@@ -533,6 +548,10 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
                   _uploadWriteByte(in);
                   boundaryPtr = 0;
                 }
+              }
+              if (bytesSinceYield >= 1024) {
+                delay(0);
+                bytesSinceYield = 0;
               }
             }
             // Found the boundary string, finish processing this file upload

@@ -36,6 +36,7 @@
 #endif
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
+#include "esp_idf_version.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
@@ -65,7 +66,11 @@
 #endif
 
 #if SOC_TEMP_SENSOR_SUPPORTED
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
 #include "driver/temperature_sensor.h"
+#else
+#include "driver/temperature_sensor.h"
+#endif
 #endif
 
 #else  // ESP32 Before IDF 4.0

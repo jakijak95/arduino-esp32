@@ -28,6 +28,7 @@
 
 #include "esp_err.h"
 #include "esp_event.h"
+#include "esp_idf_version.h"
 #include <functional>
 #include "WiFiType.h"
 #include "IPAddress.h"
@@ -47,6 +48,27 @@
 #define WiFiEventFuncCb NetworkEventFuncCb
 #define WiFiEventSysCb  NetworkEventSysCb
 #define wifi_event_id_t network_event_handle_t
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+typedef enum {
+  ESP_IF_WIFI_STA = 0,
+  ESP_IF_WIFI_AP,
+  ESP_IF_ETH,
+  ESP_IF_MAX
+} esp_interface_t;
+
+#ifndef WIFI_REASON_ASSOC_EXPIRE
+#define WIFI_REASON_ASSOC_EXPIRE WIFI_REASON_DISASSOC_DUE_TO_INACTIVITY
+#endif
+
+#ifndef WIFI_REASON_NOT_AUTHED
+#define WIFI_REASON_NOT_AUTHED WIFI_REASON_CLASS2_FRAME_FROM_NONAUTH_STA
+#endif
+
+#ifndef WIFI_REASON_NOT_ASSOCED
+#define WIFI_REASON_NOT_ASSOCED WIFI_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
+#endif
+#endif
 
 typedef enum {
   WIFI_POWER_21dBm = 84,      // 21dBm

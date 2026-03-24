@@ -20,6 +20,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "esp_attr.h"
+#include "esp_idf_version.h"
 #include "soc/spi_reg.h"
 #include "soc/spi_struct.h"
 #include "soc/periph_defs.h"
@@ -56,6 +57,9 @@
 #elif CONFIG_IDF_TARGET_ESP32C6
 #include "esp32c6/rom/ets_sys.h"
 #include "esp32c6/rom/gpio.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/spi_ll.h"
+#endif
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/ets_sys.h"
 #include "esp32h2/rom/gpio.h"
@@ -816,6 +820,10 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     }
   }
 #pragma GCC diagnostic pop
+#elif CONFIG_IDF_TARGET_ESP32C6 && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  spi_ll_enable_bus_clock(SPI2_HOST, true);
+  spi_ll_reset_register(SPI2_HOST);
+  spi_ll_enable_clock(SPI2_HOST, true);
 #elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
   periph_ll_reset(PERIPH_SPI2_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);

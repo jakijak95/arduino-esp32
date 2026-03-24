@@ -83,6 +83,11 @@ set(CORE_SRCS
   cores/esp32/WString.cpp
   )
 
+if(IDF_VERSION_MAJOR GREATER_EQUAL 6 AND IDF_TARGET STREQUAL "esp32c6")
+  list(REMOVE_ITEM CORE_SRCS cores/esp32/esp32-hal-i2c-slave.c)
+  list(APPEND CORE_SRCS cores/esp32/esp32-hal-i2c-slave-stub.c)
+endif()
+
 set(ARDUINO_ALL_LIBRARIES
   ArduinoOTA
   AsyncUDP
@@ -389,8 +394,12 @@ endforeach()
 set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRARIES_INCLUDEDIRS})
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota esp_timer esp_netif)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_rmt esp_driver_sdm esp_driver_tsens esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota esp_timer esp_netif esp_hal_ledc)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+
+if(IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4" OR IDF_TARGET STREQUAL "esp32h4")
+  list(APPEND priv_requires usb)
+endif()
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
   #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
@@ -421,6 +430,12 @@ target_compile_options(${COMPONENT_TARGET} PUBLIC
     -DARDUINO_BOARD="${idf_target_caps}_DEV"
     -DARDUINO_VARIANT="${CONFIG_ARDUINO_VARIANT}"
     -DESP32=ESP32)
+
+if(IDF_VERSION_MAJOR GREATER_EQUAL 6)
+    # Our firmware uses esp_encrypted_img before Update.write(), so the legacy
+    # AES-on-Update path can be disabled on IDF 6 where the old AES API is gone.
+    target_compile_definitions(${COMPONENT_TARGET} PUBLIC UPDATE_NOCRYPT)
+endif()
 
 if(CONFIG_AUTOSTART_ARDUINO)
     # in autostart mode, arduino-esp32 contains app_main() function and needs to

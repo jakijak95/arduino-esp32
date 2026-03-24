@@ -56,17 +56,17 @@ enum HTTPAuthMethod {
 #define HTTP_DOWNLOAD_UNIT_SIZE 1436
 
 #ifndef HTTP_UPLOAD_BUFLEN
-#define HTTP_UPLOAD_BUFLEN 1436
+#define HTTP_UPLOAD_BUFLEN 16384
 #endif
 
 #ifndef HTTP_RAW_BUFLEN
-#define HTTP_RAW_BUFLEN 1436
+#define HTTP_RAW_BUFLEN 16384
 #endif
 
-#define HTTP_MAX_DATA_WAIT      5000  //ms to wait for the client to send the request
-#define HTTP_MAX_POST_WAIT      5000  //ms to wait for POST data to arrive
-#define HTTP_MAX_SEND_WAIT      5000  //ms to wait for data chunk to be ACKed
-#define HTTP_MAX_CLOSE_WAIT     5000  //ms to wait for the client to close the connection
+#define HTTP_MAX_DATA_WAIT      1000   //ms to wait for the client to send the request
+#define HTTP_MAX_POST_WAIT      30000  //ms to wait for POST data to arrive
+#define HTTP_MAX_SEND_WAIT      30000  //ms to wait for data chunk to be ACKed
+#define HTTP_MAX_CLOSE_WAIT     1000   //ms to wait for the client to close the connection
 #define HTTP_MAX_BASIC_AUTH_LEN 256   // maximum length of a basic Auth base64 encoded username:password string
 
 #define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)

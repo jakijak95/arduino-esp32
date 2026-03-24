@@ -8,9 +8,16 @@
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
+#if MBEDTLS_MAJOR_VERSION >= 4
+#include "mbedtls/private/entropy.h"
+#include "mbedtls/private/ctr_drbg.h"
+#else
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
+#endif
 #include "mbedtls/error.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/x509_crt.h"
 
 typedef esp_err_t (*crt_bundle_attach_cb)(void *conf);
 

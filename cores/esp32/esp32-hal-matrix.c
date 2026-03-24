@@ -14,8 +14,12 @@
 
 #include "esp32-hal-matrix.h"
 #include "esp_attr.h"
+#include "esp_idf_version.h"
 
 #include "esp_system.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "esp_rom_gpio.h"
+#endif
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
 #include "soc/gpio_pins.h"
 #if CONFIG_IDF_TARGET_ESP32  // ESP32/PICO-D4
@@ -48,19 +52,19 @@
 #endif
 
 void ARDUINO_ISR_ATTR pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable) {
-  gpio_matrix_out(pin, function, invertOut, invertEnable);
+  esp_rom_gpio_connect_out_signal(pin, function, invertOut, invertEnable);
 }
 
 void ARDUINO_ISR_ATTR pinMatrixOutDetach(uint8_t pin, bool invertOut, bool invertEnable) {
-  gpio_matrix_out(pin, SIG_GPIO_OUT_IDX, invertOut, invertEnable);
+  esp_rom_gpio_connect_out_signal(pin, SIG_GPIO_OUT_IDX, invertOut, invertEnable);
 }
 
 void ARDUINO_ISR_ATTR pinMatrixInAttach(uint8_t pin, uint8_t signal, bool inverted) {
-  gpio_matrix_in(pin, signal, inverted);
+  esp_rom_gpio_connect_in_signal(pin, signal, inverted);
 }
 
 void ARDUINO_ISR_ATTR pinMatrixInDetach(uint8_t signal, bool high, bool inverted) {
-  gpio_matrix_in(high ? GPIO_MATRIX_CONST_ONE_INPUT : GPIO_MATRIX_CONST_ZERO_INPUT, signal, inverted);
+  esp_rom_gpio_connect_in_signal(high ? GPIO_MATRIX_CONST_ONE_INPUT : GPIO_MATRIX_CONST_ZERO_INPUT, signal, inverted);
 }
 /*
 void ARDUINO_ISR_ATTR intrMatrixAttach(uint32_t source, uint32_t inum){

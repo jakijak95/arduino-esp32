@@ -21,11 +21,20 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
+#include "esp_idf_version.h"
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/uart_periph.h"
+#define SOC_UART_TX_PIN_IDX  SOC_UART_PERIPH_SIGNAL_TX
+#define SOC_UART_RX_PIN_IDX  SOC_UART_PERIPH_SIGNAL_RX
+#define SOC_UART_RTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_RTS
+#define SOC_UART_CTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_CTS
+#else
 #include "soc/uart_periph.h"
+#endif
 #include "rom/ets_sys.h"
 #include "rom/gpio.h"
 

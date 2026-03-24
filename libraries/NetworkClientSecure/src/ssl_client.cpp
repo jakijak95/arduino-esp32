@@ -12,7 +12,11 @@
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
+#if MBEDTLS_MAJOR_VERSION >= 4
+#include <mbedtls/private/sha256.h>
+#else
 #include <mbedtls/sha256.h>
+#endif
 #include <mbedtls/oid.h>
 #include <algorithm>
 #include <string>

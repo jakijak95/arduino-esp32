@@ -10,7 +10,14 @@
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 #ifndef UPDATE_NOCRYPT
+#if MBEDTLS_MAJOR_VERSION >= 4
+#include "mbedtls/private/aes.h"
+#else
 #include "mbedtls/aes.h"
+#endif
+#ifndef MBEDTLS_AES_ENCRYPT
+#define MBEDTLS_AES_ENCRYPT 1
+#endif
 #endif /* UPDATE_NOCRYPT */
 
 static const char *_err2str(uint8_t _error) {
