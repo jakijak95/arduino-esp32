@@ -17,19 +17,26 @@
 #include "USBAudioCard.h"
 
 #if CONFIG_IDF_TARGET_ESP32S3
-#define I2S_BCLK 5
-#define I2S_LRCK 6
-#define I2S_DOUT 7
-#define I2S_DIN  4
+#define I2S_BCLK 4
+#define I2S_LRCK 5
+#define I2S_DOUT 6
+#define I2S_DIN  7
+#define I2S_WIDTH I2S_DATA_BIT_WIDTH_16BIT
+#define UAC_BPS UAC_BPS_16
 #else
 #define I2S_BCLK 0
 #define I2S_LRCK 1
 #define I2S_DOUT 2
 #define I2S_DIN  3
+#define I2S_WIDTH I2S_DATA_BIT_WIDTH_32BIT
+#define UAC_BPS UAC_BPS_24
 #endif
 
-USBAudioCard uac(48000, UAC_BPS_24, UAC_SPK_STEREO, UAC_MIC_STEREO);
+USBAudioCard uac(48000, UAC_BPS, UAC_SPK_STEREO, UAC_MIC_STEREO);
 I2SClass i2s;
+
+// Buffer to hold input (microphone) data
+uint8_t inputBuffer[1024];
 
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_USB_EVENTS) {
@@ -53,6 +60,24 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   }
 }
 
+void checkButton() {
+  // Poll every 50ms
+  const uint32_t interval_ms = 50;
+  static uint32_t start_ms = 0;
+  if (millis() - start_ms < interval_ms) {
+    return;
+  }
+  start_ms += interval_ms;
+
+  static uint32_t btn_prev = 0;
+  uint32_t btn = digitalRead(BOOT_PIN);
+  if (!btn_prev && btn) {
+    // Mute/Unmute UAC2
+    uac.mute(UAC_CHAN_MASTER, !uac.mute(UAC_CHAN_MASTER));
+  }
+  btn_prev = btn;
+}
+
 void onSpkData(void *data, uint16_t len) {
   uac.applyVolume(data, len);
   i2s.write((const uint8_t *)data, len);
@@ -63,7 +88,7 @@ void setup() {
   Serial.begin(115200);
 
   i2s.setPins(I2S_BCLK, I2S_LRCK, I2S_DOUT, I2S_DIN);
-  i2s.begin(I2S_MODE_STD, 48000, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO, I2S_STD_SLOT_BOTH);
+  i2s.begin(I2S_MODE_STD, 48000, I2S_WIDTH, I2S_SLOT_MODE_STEREO, I2S_STD_SLOT_BOTH);
 
   uac.onEvent(usbEventCallback);
   uac.onData(onSpkData);
@@ -71,18 +96,14 @@ void setup() {
 
   USB.onEvent(usbEventCallback);
   USB.begin();
-  Serial.printf("Headset running\r\n");
 }
 
 void loop() {
-  static uint32_t btn_prev = 0;
-  uint32_t btn = digitalRead(BOOT_PIN);
-  if (!btn_prev && btn) {
-    // Mute/Unmute
-    uac.mute(UAC_CHAN_MASTER, !uac.mute(UAC_CHAN_MASTER));
+  checkButton();
+  // Read 1ms worth of Microphone Data
+  size_t toRead = (uac.sampleRate() * uac.micChannels() * uac.bytesPerSample()) / 1000;
+  size_t received = i2s.readBytes((char *)inputBuffer, toRead);
+  if (received > 0) {
+    uac.write(inputBuffer, (uint16_t)received);
   }
-  btn_prev = btn;
-  
-  // Poll every 50ms
-  delay(50);
 }
